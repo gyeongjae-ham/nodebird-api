@@ -3,8 +3,9 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const url = require('url');
 
-const { verifyToken, apiLimiter } = require('./middlewares');
+const { verifyToken } = require('./middlewares');
 const { Domain, User, Post, Hashtag } = require('../models');
+const { restore } = require('../models/user');
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.use(async (req, res, next) => {
     }
 });
 
-router.post('/token', apiLimiter, async (req, res) => {
+router.post('/token', async (req, res) => {
     const { clientSecret } = req.body;
     try {
         const domain = await Domain.findOne({
@@ -38,13 +39,17 @@ router.post('/token', apiLimiter, async (req, res) => {
                 message: '등록되지 않은 도메인입니다. 먼저 도메인을 등록하세요',
             });
         }
-        const token = jwt.sign({
-            id: domain.User.id,
-            nick: domain.User.nick,
-        }, process.env.JWT_SECRET, {
-            expiresIn: '30m', // 30분
-            issuer: 'nodebird',
-        });
+        const token = jwt.sign(
+            {
+                id: domain.User.id,
+                nick: domain.User.nick,
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: '30m', // 30분
+                issuer: 'nodebird',
+            }
+        );
         return res.json({
             code: 200,
             message: '토큰이 발급되었습니다',
@@ -59,11 +64,11 @@ router.post('/token', apiLimiter, async (req, res) => {
     }
 });
 
-router.get('/test', verifyToken, apiLimiter, (req, res) => {
+router.get('/test', verifyToken, (req, res) => {
     res.json(req.decoded);
 });
 
-router.get('/posts/my', apiLimiter, verifyToken, (req, res) => {
+router.get('/posts/my', verifyToken, (req, res) => {
     Post.findAll({ where: { userId: req.decoded.id } })
         .then((posts) => {
             console.log(posts);
@@ -81,7 +86,7 @@ router.get('/posts/my', apiLimiter, verifyToken, (req, res) => {
         });
 });
 
-router.get('/posts/hashtag/:title', verifyToken, apiLimiter, async (req, res) => {
+router.get('/posts/hashtag/:title', verifyToken, async (req, res) => {
     try {
         const hashtag = await Hashtag.findOne({ where: { title: req.params.title } });
         if (!hashtag) {

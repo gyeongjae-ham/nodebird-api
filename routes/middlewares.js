@@ -36,7 +36,6 @@ exports.verifyToken = (req, res, next) => {
     }
 };
 
-// rateLimit constructor 아니라고 에러 뜸
 // exports.apiLimiter = new rateLimit({
 //     windowMs: 60 * 1000, // 1분
 //     max: 10,

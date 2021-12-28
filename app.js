@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const session = require('express-session');
 const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
+const cors = require('cors');
 
 dotenv.config();
 const v2 = require('./routes/v2');
@@ -50,6 +51,7 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(cors());
 
 app.use('/v1', v1);
 app.use('/v2', v2);
